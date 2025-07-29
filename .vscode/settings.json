@@ -1,0 +1,52 @@
+{
+    "Lua.runtime.version": "Lua 5.1",
+    "Lua.diagnostics.globals": [
+        "SlashCmdList",
+        "UIParent", 
+        "CopyTable",
+        "CreateFrame",
+        "UnitName",
+        "UnitIsConnected",
+        "UnitExists",
+        "UnitIsGroupLeader",
+        "IsInGroup",
+        "IsInRaid",
+        "GetNumGroupMembers",
+        "GetRaidTargetIndex",
+        "RandomRoll",
+        "PlaySound",
+        "LibStub",
+        "SetCursor",
+        "ResetCursor",
+        "print",
+        "C_Timer",
+        "GameFontNormal",
+        "GameFontNormalSmall",
+        "GameFontHighlight",
+        "UIPanelButtonTemplate",
+        "InputBoxTemplate",
+        "BackdropTemplate",
+        "_G"
+    ],
+    "Lua.diagnostics.disable": [
+        "undefined-global", 
+        "lowercase-global",
+        "missing-parameter",
+        "redundant-parameter"
+    ],
+    "Lua.workspace.checkThirdParty": false,
+    "Lua.runtime.builtin": {
+        "basic": "disable",
+        "debug": "disable",
+        "io": "disable",
+        "math": "disable",
+        "os": "disable",
+        "package": "disable",
+        "string": "disable",
+        "table": "disable",
+        "utf8": "disable"
+    },
+    "Lua.workspace.library": [
+        "~\\.vscode\\extensions\\ketho.wow-api-0.20.8\\Annotations\\Core"
+    ]
+}
