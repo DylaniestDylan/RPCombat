@@ -1,0 +1,12 @@
+## Interface: 90207
+## Title: RPCombat
+## Notes: Simple GUI for Turn-based RP Combat
+## Author: Dylan
+## Version: 0.0.1
+## RequiredDeps:
+## OptionalDeps: LibStub, CallbackHandler-1.0, LibDataBroker-1.1, LibDBIcon-1.0
+## X-Curse-Project-ID: 999999
+## SavedVariables: RPCombatDB
+## SavedVariablesPerCharacter: RPCombatCharDB
+
+RPCombat.lua
