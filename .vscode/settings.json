@@ -26,7 +26,15 @@
         "UIPanelButtonTemplate",
         "InputBoxTemplate",
         "BackdropTemplate",
-        "_G"
+        "_G",
+        "GetCursorPosition",
+        "GetScreenWidth",
+        "GetScreenHeight",
+        "GameTooltip",
+        "C_ChatInfo",
+        "GetServerTime",
+        "GetAddOnMetadata",
+        "strsplit"
     ],
     "Lua.diagnostics.disable": [
         "undefined-global", 

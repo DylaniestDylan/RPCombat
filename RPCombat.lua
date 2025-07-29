@@ -1,13 +1,12 @@
--- RPCombat.lua
--- Main initialization file for RP Combat Tracker
-
+-- Main file
 local addonName, addonTable = ...
 
 -- Main addon object
+-- It's empty lol
 RPCombat = {}
 local RC = RPCombat
 
--- Initialize when addon loads
+-- Initialize on addon load
 local function OnAddonLoaded(self, event, loadedAddonName)
     if loadedAddonName == addonName then
         RC:Initialize()
@@ -18,15 +17,16 @@ local function OnAddonLoaded(self, event, loadedAddonName)
     end
 end
 
--- Register for addon loaded event
+-- Register event for addon load
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("ADDON_LOADED")
 frame:SetScript("OnEvent", OnAddonLoaded)
 
 function RC:Initialize()
-    -- Initialize modules in proper order
+    -- Initialize the modules
     addonTable.Config:Initialize()
     addonTable.Events:Initialize()
+    addonTable.Communication:Initialize()
     addonTable.PartyManager:Initialize()
     addonTable.MarkerTracker:Initialize()
     addonTable.CombatManager:Initialize()
@@ -70,8 +70,32 @@ function RC:ShowHelp()
     print("|cffffffff/rpc next|r - Next turn")
     print("|cffffffff/rpc roll|r - Roll initiative")
     print("|cffffffff/rpc show|r - Show/hide tracker")
+    print("|cffffffff/rpc clients|r - Show connected clients")
     print("|cffffffff/rpc minimap|r - Toggle minimap icon")
     print("|cff888888Drag the bottom-right corner to resize the window|r")
+end
+
+function RC:ShowConnectedClients()
+    local Communication = addonTable.Communication
+    if not Communication then
+        print("|cffff0000RPCombat:|r Communication module not loaded.")
+        return
+    end
+    
+    local clients = Communication:GetConnectedClients()
+    local count = 0
+    
+    print("|cff00ff00RPCombat Connected Clients:|r")
+    for clientName, clientData in pairs(clients) do
+        print("|cffffffff" .. clientName .. "|r - v" .. clientData.version)
+        count = count + 1
+    end
+    
+    if count == 0 then
+        print("|cff888888No other clients detected. Make sure party members have RPCombat installed.|r")
+    else
+        print("|cff888888Total: " .. count .. " connected clients|r")
+    end
 end
 
 function RC:UpdateDisplay()
@@ -119,6 +143,7 @@ function RC:OnFrameShow()
 end
 
 -- Slash commands
+-- TODO: Rework later
 local function HandleSlashCommand(msg)
     local command, arg = msg:match("^(%S*)%s*(.*)")
     command = command:lower()
@@ -135,6 +160,8 @@ local function HandleSlashCommand(msg)
         RC:RollInitiative()
     elseif command == "show" then
         addonTable.MainFrame:Toggle()
+    elseif command == "clients" then
+        RC:ShowConnectedClients()
     elseif command == "minimap" then
         local minimapConfig = addonTable.Config:Get("minimap")
         minimapConfig.hide = not minimapConfig.hide

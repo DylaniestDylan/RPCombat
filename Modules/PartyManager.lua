@@ -1,9 +1,7 @@
--- Modules\PartyManager.lua
--- Party and group member management
-
+-- Party member management
 local addonName, addonTable = ...
 
--- Initialize PartyManager module
+-- Initialize module
 addonTable.PartyManager = {}
 local PartyManager = addonTable.PartyManager
 
@@ -58,7 +56,7 @@ function PartyManager:UpdateLeaderStatus()
     if IsInGroup() then
         self.isLeader = UnitIsGroupLeader("player")
     else
-        self.isLeader = true -- Solo player is always "leader"
+        self.isLeader = true -- Solo player is always leader
     end
 end
 
@@ -71,7 +69,6 @@ function PartyManager:IsLeader()
 end
 
 function PartyManager:NotifyUpdate()
-    -- Notify main addon of party changes
     if _G.RPCombat and _G.RPCombat.OnPartyUpdate then
         _G.RPCombat:OnPartyUpdate()
     end

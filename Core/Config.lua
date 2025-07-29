@@ -1,9 +1,6 @@
--- Core\Config.lua
--- Configuration management for RPCombat
-
+-- Management for RPCombat
 local addonName, addonTable = ...
 
--- Initialize Config module
 addonTable.Config = {}
 local Config = addonTable.Config
 

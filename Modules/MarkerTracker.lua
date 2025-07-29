@@ -1,9 +1,8 @@
--- Modules\MarkerTracker.lua
--- Raid marker tracking for mobs
+-- Raid marker tracking
 
 local addonName, addonTable = ...
 
--- Initialize MarkerTracker module
+-- Initialize module
 addonTable.MarkerTracker = {}
 local MarkerTracker = addonTable.MarkerTracker
 
@@ -29,6 +28,7 @@ function MarkerTracker:UpdateMarkedMobs()
     self.markedMobs = {}
     
     -- Only group leaders can see marked targets reliably
+    -- TODO: Fix to allow all players to see marked targets
     local PartyManager = addonTable.PartyManager
     if not PartyManager:IsLeader() then 
         return
@@ -78,7 +78,6 @@ function MarkerTracker:GetMarkedMobs()
 end
 
 function MarkerTracker:NotifyUpdate()
-    -- Notify main addon of marker changes
     if _G.RPCombat and _G.RPCombat.OnMarkersUpdate then
         _G.RPCombat:OnMarkersUpdate()
     end

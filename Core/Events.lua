@@ -1,9 +1,7 @@
--- Core\Events.lua
 -- Event management system for RPCombat
 
 local addonName, addonTable = ...
 
--- Initialize Events module
 addonTable.Events = {}
 local Events = addonTable.Events
 

@@ -1,16 +1,13 @@
--- Modules\CombatManager.lua
--- Core combat logic and turn management
-
+-- Combat logic and turn management
 local addonName, addonTable = ...
 
--- Initialize CombatManager module
 addonTable.CombatManager = {}
 local CombatManager = addonTable.CombatManager
 
 CombatManager.isInCombat = false
 CombatManager.turnOrder = {}
 CombatManager.currentTurn = 1
-CombatManager.initiativeRolled = {} -- Track who has rolled initiative
+CombatManager.initiativeRolled = {}
 
 function CombatManager:Initialize()
     local Events = addonTable.Events
@@ -33,7 +30,16 @@ function CombatManager:StartCombat()
     
     self.turnOrder = {}
     self.currentTurn = 1
-    self.initiativeRolled = {} -- Reset initiative locks
+    self.initiativeRolled = {}
+    
+    -- Broadcast combat start to party members
+    local Communication = addonTable.Communication
+    if Communication then
+        print("|cff888888RPCombat:|r Broadcasting combat start to party...")
+        Communication:BroadcastCombatStart()
+    else
+        print("|cffff0000RPCombat:|r Communication module not available!")
+    end
     
     return true
 end
@@ -48,6 +54,12 @@ function CombatManager:EndCombat()
     
     self.isInCombat = false
     print("|cff00ff00RPCombat:|r Combat ended.")
+    
+    -- Broadcast combat end to party members
+    local Communication = addonTable.Communication
+    if Communication then
+        Communication:BroadcastCombatEnd()
+    end
     
     return true
 end
@@ -86,6 +98,15 @@ function CombatManager:NextTurn()
         end
     end
     
+    -- Broadcast turn advance to party members (only if party lead)
+    local PartyManager = addonTable.PartyManager
+    if PartyManager:IsLeader() then
+        local Communication = addonTable.Communication
+        if Communication then
+            Communication:BroadcastTurnAdvance(self.currentTurn)
+        end
+    end
+    
     return true
 end
 
@@ -96,11 +117,21 @@ function CombatManager:HandleRollMessage(message)
     if playerName and roll and maxRoll == "20" then
         self:AddToTurnOrder(playerName, tonumber(roll))
         self.initiativeRolled[playerName] = true
+        
+        -- Broadcast roll to party members
+        if playerName == UnitName("player") then
+            local Communication = addonTable.Communication
+            if Communication then
+                print("|cff888888RPCombat:|r Broadcasting your roll (" .. roll .. ") to party...")
+                Communication:BroadcastInitiativeRoll(playerName, tonumber(roll))
+            else
+                print("|cffff0000RPCombat:|r Communication module not available!")
+            end
+        end
     end
 end
 
 function CombatManager:AddToTurnOrder(playerName, roll)
-    -- Remove existing entry for this player
     for i, combatant in ipairs(self.turnOrder) do
         if combatant.name == playerName then
             table.remove(self.turnOrder, i)
@@ -114,7 +145,6 @@ function CombatManager:AddToTurnOrder(playerName, roll)
     
     print("|cff00ff00RPCombat:|r " .. playerName .. " rolled " .. roll .. " for initiative.")
     
-    -- Notify main addon
     if _G.RPCombat and _G.RPCombat.OnTurnOrderUpdate then
         _G.RPCombat:OnTurnOrderUpdate()
     end
@@ -134,7 +164,8 @@ end
 
 function CombatManager:RemovePlayer(playerName)
     -- Only party leader can remove players
-    if not RPCombat.Modules.PartyManager:IsPartyLeader() then
+    local PartyManager = addonTable.PartyManager
+    if not PartyManager:IsLeader() then
         print("|cffff0000RPCombat:|r Only the party leader can remove players.")
         return false
     end
@@ -145,7 +176,6 @@ function CombatManager:RemovePlayer(playerName)
             table.remove(self.turnOrder, i)
             print("|cffff9900RPCombat:|r " .. playerName .. " has been removed from combat.")
             
-            -- Adjust current turn if necessary
             if i <= self.currentTurn then
                 self.currentTurn = self.currentTurn - 1
                 if self.currentTurn < 1 and #self.turnOrder > 0 then
@@ -153,7 +183,12 @@ function CombatManager:RemovePlayer(playerName)
                 end
             end
             
-            -- Notify main addon
+            -- Broadcast removal to party members
+            local Communication = addonTable.Communication
+            if Communication then
+                Communication:BroadcastPlayerRemove(playerName)
+            end
+            
             if _G.RPCombat and _G.RPCombat.OnTurnOrderUpdate then
                 _G.RPCombat:OnTurnOrderUpdate()
             end
@@ -168,7 +203,8 @@ end
 
 function CombatManager:AllowReroll(playerName)
     -- Only party leader can allow rerolls
-    if not RPCombat.Modules.PartyManager:IsPartyLeader() then
+    local PartyManager = addonTable.PartyManager
+    if not PartyManager:IsLeader() then
         print("|cffff0000RPCombat:|r Only the party leader can allow rerolls.")
         return false
     end
@@ -176,6 +212,13 @@ function CombatManager:AllowReroll(playerName)
     if self.initiativeRolled[playerName] then
         self.initiativeRolled[playerName] = nil
         print("|cffff9900RPCombat:|r " .. playerName .. " can now reroll their initiative.")
+        
+        -- Broadcast reroll allowance to party members
+        local Communication = addonTable.Communication
+        if Communication then
+            Communication:BroadcastAllowReroll(playerName)
+        end
+        
         return true
     else
         print("|cffff9900RPCombat:|r " .. playerName .. " hasn't rolled initiative yet.")

@@ -1,9 +1,7 @@
--- UI\TurnOrder.lua
 -- Combat turn order display
-
 local addonName, addonTable = ...
 
--- Initialize TurnOrder module
+-- Initialize Module
 addonTable.TurnOrder = {}
 local TurnOrder = addonTable.TurnOrder
 
@@ -90,11 +88,34 @@ function TurnOrder:Update()
         frame:SetScript("OnClick", function(self, button)
             if button == "RightButton" then
                 local PartyManager = addonTable.PartyManager
-                if PartyManager:IsPartyLeader() then
+                if PartyManager:IsLeader() then
                     TurnOrder:ShowContextMenu(combatant.name, self)
                 end
             end
         end)
+        
+        -- Add hover effect for party leads
+        local PartyManager = addonTable.PartyManager
+        if PartyManager:IsLeader() then
+            frame:SetScript("OnEnter", function(self)
+                local hoverTexture = self:CreateTexture(nil, "HIGHLIGHT")
+                hoverTexture:SetAllPoints()
+                hoverTexture:SetColorTexture(1, 1, 1, 0.1)
+                self.hoverTexture = hoverTexture
+                
+                -- Show tooltip
+                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                GameTooltip:SetText("Right-click for options", 1, 1, 1)
+                GameTooltip:Show()
+            end)
+            frame:SetScript("OnLeave", function(self)
+                if self.hoverTexture then
+                    self.hoverTexture:Hide()
+                    self.hoverTexture = nil
+                end
+                GameTooltip:Hide()
+            end)
+        end
         
         table.insert(self.frames, frame)
     end
@@ -133,52 +154,94 @@ function TurnOrder:ClearFrames()
 end
 
 function TurnOrder:ShowContextMenu(playerName, anchorFrame)
-    -- Create a simple dropdown-style menu
+    -- Hide any existing context menu first
+    if self.activeContextMenu then
+        self.activeContextMenu:Hide()
+        self.activeContextMenu = nil
+    end
+    
+    -- Simple dropdown menu
     local menu = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
-    menu:SetSize(120, 60)
-    menu:SetPoint("TOPLEFT", anchorFrame, "TOPRIGHT", 5, 0)
+    menu:SetSize(130, 70)
+    menu:SetFrameStrata("TOOLTIP")
+    menu:SetFrameLevel(100)
+    
+    -- Menu position rules
+    local x, y = GetCursorPosition()
+    local scale = UIParent:GetEffectiveScale()
+    x, y = x / scale, y / scale
+    if x + 130 > GetScreenWidth() then
+        x = x - 130
+    end
+    if y - 70 < 0 then
+        y = y + 70
+    end
+    
+    menu:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", x, y)
+    
     menu:SetBackdrop({
         bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
         edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
         tile = true, tileSize = 32, edgeSize = 32,
         insets = { left = 8, right = 8, top = 8, bottom = 8 }
     })
-    menu:SetBackdropColor(0, 0, 0, 0.8)
-    menu:SetFrameStrata("TOOLTIP")
+    menu:SetBackdropColor(0.1, 0.1, 0.1, 0.9)
+    menu:SetBackdropBorderColor(0.8, 0.8, 0.8, 1)
     
-    -- Remove button
-    local removeBtn = CreateFrame("Button", nil, menu, "UIPanelButtonTemplate")
-    removeBtn:SetPoint("TOP", menu, "TOP", 0, -10)
-    removeBtn:SetSize(100, 20)
-    removeBtn:SetText("Remove")
-    removeBtn:SetScript("OnClick", function()
-        local CombatManager = addonTable.CombatManager
-        CombatManager:RemovePlayer(playerName)
-        menu:Hide()
-    end)
+    -- Header text
+    local header = menu:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    header:SetPoint("TOP", menu, "TOP", 0, -12)
+    header:SetText(playerName)
+    header:SetTextColor(1, 1, 0.8)
     
-    -- Allow reroll button
+    -- Reroll button
     local rerollBtn = CreateFrame("Button", nil, menu, "UIPanelButtonTemplate")
-    rerollBtn:SetPoint("TOP", removeBtn, "BOTTOM", 0, -5)
-    rerollBtn:SetSize(100, 20)
+    rerollBtn:SetPoint("TOP", header, "BOTTOM", 0, -8)
+    rerollBtn:SetSize(110, 20)
     rerollBtn:SetText("Allow Reroll")
     rerollBtn:SetScript("OnClick", function()
         local CombatManager = addonTable.CombatManager
         CombatManager:AllowReroll(playerName)
         menu:Hide()
+        self.activeContextMenu = nil
     end)
     
-    -- Auto-hide when clicking elsewhere
+    -- Button for removing players from the turn order
+    local removeBtn = CreateFrame("Button", nil, menu, "UIPanelButtonTemplate")
+    removeBtn:SetPoint("TOP", rerollBtn, "BOTTOM", 0, -5)
+    removeBtn:SetSize(110, 20)
+    removeBtn:SetText("Remove")
+    removeBtn:SetScript("OnClick", function()
+        local CombatManager = addonTable.CombatManager
+        CombatManager:RemovePlayer(playerName)
+        menu:Hide()
+        self.activeContextMenu = nil
+    end)
+
+    removeBtn:GetFontString():SetTextColor(1, 0.5, 0.5)
+    
+    -- Hide when clicking elsewhere
     menu:SetScript("OnShow", function()
         C_Timer.After(0.1, function()
             menu:SetScript("OnUpdate", function(self)
                 if not self:IsMouseOver() then
                     self:Hide()
+                    TurnOrder.activeContextMenu = nil
                     self:SetScript("OnUpdate", nil)
                 end
             end)
         end)
     end)
     
+    -- Also hide on escape key
+    menu:SetScript("OnKeyDown", function(self, key)
+        if key == "ESCAPE" then
+            self:Hide()
+            TurnOrder.activeContextMenu = nil
+        end
+    end)
+    menu:SetPropagateKeyboardInput(true)
+    
+    self.activeContextMenu = menu
     menu:Show()
 end

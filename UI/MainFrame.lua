@@ -1,9 +1,8 @@
--- UI\MainFrame.lua
--- Main UI window and controls
+-- Main UI window & the controls
 
 local addonName, addonTable = ...
 
--- Initialize MainFrame module
+-- Initialize module
 addonTable.MainFrame = {}
 local MainFrame = addonTable.MainFrame
 
@@ -11,7 +10,7 @@ MainFrame.frame = nil
 MainFrame.listFrame = nil
 MainFrame.listContent = nil
 
--- LibDBIcon support
+-- LibDBIcon
 local LDB = LibStub and LibStub:GetLibrary("LibDataBroker-1.1", true)
 local LDBIcon = LibStub and LibStub:GetLibrary("LibDBIcon-1.0", true)
 local RPCombatLDB = nil
@@ -107,66 +106,14 @@ function MainFrame:CreateControls()
     rollButton:SetScript("OnClick", function() 
         if _G.RPCombat then _G.RPCombat:RollInitiative() end 
     end)
-    
-    -- Third row - Leader controls
-    local controlsFrame3 = CreateFrame("Frame", nil, mainFrame)
-    controlsFrame3:SetPoint("TOPLEFT", controlsFrame2, "BOTTOMLEFT", 0, -5)
-    controlsFrame3:SetSize(280, 30)
-    
-    -- Add text input for player name
-    local playerNameInput = CreateFrame("EditBox", nil, controlsFrame3, "InputBoxTemplate")
-    playerNameInput:SetPoint("LEFT", controlsFrame3, "LEFT", 0, 0)
-    playerNameInput:SetSize(100, 20)
-    playerNameInput:SetAutoFocus(false)
-    playerNameInput:SetText("Player Name")
-    playerNameInput:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
-    playerNameInput:SetScript("OnEditFocusGained", function(self) 
-        if self:GetText() == "Player Name" then
-            self:SetText("")
-        end
-    end)
-    playerNameInput:SetScript("OnEditFocusLost", function(self)
-        if self:GetText() == "" then
-            self:SetText("Player Name")
-        end
-    end)
-    
-    local removeButton = CreateFrame("Button", nil, controlsFrame3, "UIPanelButtonTemplate")
-    removeButton:SetPoint("LEFT", playerNameInput, "RIGHT", 5, 0)
-    removeButton:SetSize(60, 22)
-    removeButton:SetText("Remove")
-    removeButton:SetScript("OnClick", function() 
-        local playerName = playerNameInput:GetText()
-        if playerName and playerName ~= "Player Name" and playerName ~= "" then
-            if _G.RPCombat and _G.RPCombat.Modules.CombatManager then
-                _G.RPCombat.Modules.CombatManager:RemovePlayer(playerName)
-            end
-        end
-    end)
-    
-    local rerollButton = CreateFrame("Button", nil, controlsFrame3, "UIPanelButtonTemplate")
-    rerollButton:SetPoint("LEFT", removeButton, "RIGHT", 5, 0)
-    rerollButton:SetSize(80, 22)
-    rerollButton:SetText("Allow Reroll")
-    rerollButton:SetScript("OnClick", function() 
-        local playerName = playerNameInput:GetText()
-        if playerName and playerName ~= "Player Name" and playerName ~= "" then
-            if _G.RPCombat and _G.RPCombat.Modules.CombatManager then
-                _G.RPCombat.Modules.CombatManager:AllowReroll(playerName)
-            end
-        end
-    end)
-    
-    -- Store reference for later use
-    self.playerNameInput = playerNameInput
 end
 
 function MainFrame:CreateListFrame()
     local mainFrame = self.frame
     
     local listFrame = CreateFrame("Frame", nil, mainFrame)
-    listFrame:SetPoint("TOPLEFT", mainFrame, "TOPLEFT", 10, -170) -- Moved down to make room for third row
-    listFrame:SetSize(260, 190) -- Slightly smaller to fit
+    listFrame:SetPoint("TOPLEFT", mainFrame, "TOPLEFT", 10, -140) 
+    listFrame:SetSize(260, 220) 
     listFrame:SetClipsChildren(true)
     
     listFrame:EnableMouseWheel(true)
@@ -309,7 +256,7 @@ function MainFrame:UpdateListFrameSize()
     if not self.listFrame then return end
     
     local mainWidth, mainHeight = self.frame:GetSize()
-    local listHeight = mainHeight - 180  -- Account for controls and margins
+    local listHeight = mainHeight - 180
     local listWidth = mainWidth - 40
     
     listHeight = math.max(listHeight, 100)

@@ -1,16 +1,13 @@
--- UI\InitiativeList.lua
--- Pre-combat initiative list display
-
+-- Initiative list display
 local addonName, addonTable = ...
 
--- Initialize InitiativeList module
+-- Initialize module
 addonTable.InitiativeList = {}
 local InitiativeList = addonTable.InitiativeList
 
 InitiativeList.frames = {}
 
 function InitiativeList:Initialize()
-    -- Nothing specific needed
 end
 
 function InitiativeList:Update()
@@ -89,7 +86,19 @@ function InitiativeList:Update()
                 nameText:SetPoint("RIGHT", rollButton, "LEFT", -5, 0)
                 nameText:SetJustifyH("LEFT")
             else
-                nameText:SetTextColor(0.7, 0.7, 1)
+                -- Check if this player has the addon
+                local Communication = addonTable.Communication
+                local hasAddon = Communication and Communication:IsClientConnected(combatant.name)
+                
+                if hasAddon then
+                    nameText:SetTextColor(0.7, 0.7, 1)
+                    local addonIcon = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                    addonIcon:SetPoint("RIGHT", frame, "RIGHT", -5, 0)
+                    addonIcon:SetText("|cff00ff00[A]|r")
+                    addonIcon:SetTextColor(0, 1, 0)
+                else
+                    nameText:SetTextColor(0.7, 0.7, 0.7) -- Gray for non-addon users
+                end
             end
         else
             nameText:SetTextColor(1, 0.7, 0.7)
